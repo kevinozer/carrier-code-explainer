@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Code Explainer — Carrier AI Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --blue:#005EB8; --blue-d:#00437f; --navy:#0F1B2D; --ink:#1A2433; --muted:#5A6B82; --line:#E2E8F0; --bg:#F4F7FB; --card:#fff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Inter,system-ui,Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  code, pre, textarea.code { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  .nav { background:var(--blue); color:#fff; display:flex; align-items:center; gap:14px; padding:12px 22px; }
+  .nav .brand { font-weight:800; letter-spacing:.2px; display:flex; align-items:center; gap:10px; }
+  .nav .brand .logo { font-family:Georgia,'Times New Roman',serif; font-style:italic; font-weight:700; background:#fff; color:var(--blue); border-radius:999px; padding:2px 12px; }
+  .nav .sp { flex:1; }
+  .langs button { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:5px 10px; font-size:13px; font-weight:600; cursor:pointer; margin-left:4px; }
+  .langs button.on { background:#fff; color:var(--blue); }
+  .wrap { max-width:1120px; margin:0 auto; padding:24px 22px 80px; }
+  h1 { font-size:26px; margin:6px 0 4px; }
+  .sub { color:var(--muted); margin:0 0 22px; max-width:760px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+  .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 12px; }
+  textarea.code { width:100%; min-height:220px; border:1px solid var(--line); border-radius:10px; padding:14px; font-size:13px; line-height:1.55; resize:vertical; background:#fbfdff; }
+  textarea.code:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,94,184,.12); }
+  .drop { border:2px dashed var(--line); border-radius:10px; padding:14px; text-align:center; color:var(--muted); font-size:14px; cursor:pointer; margin-top:10px; transition:.15s; }
+  .drop:hover, .drop.over { border-color:var(--blue); background:rgba(0,94,184,.04); color:var(--blue); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  .btn { border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:10px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
+  .btn:hover { border-color:var(--blue); color:var(--blue); }
+  .btn.primary { background:var(--blue); color:#fff; border-color:var(--blue); }
+  .btn.primary:hover { background:var(--blue-d); color:#fff; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .tabs { display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:16px; flex-wrap:wrap; }
+  .tab { padding:10px 16px; border:none; background:none; font-size:14px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; }
+  .tab.on { color:var(--blue); border-bottom-color:var(--blue); }
+  .out { min-height:80px; }
+  .md { font-size:15px; line-height:1.7; }
+  .md h1 { font-size:22px; } .md h2 { font-size:18px; margin-top:1.3em; } .md h3 { font-size:15px; }
+  .md code { background:#eef2f7; padding:1px 5px; border-radius:5px; font-size:13px; }
+  .md pre { background:var(--navy); color:#e6edf6; padding:14px; border-radius:10px; overflow:auto; }
+  .md pre code { background:none; color:inherit; }
+  .md ul,.md ol { padding-left:22px; }
+  .muted-note { color:var(--muted); font-size:13px; }
+  .diagram-types { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:7px 14px; font-size:13px; font-weight:600; cursor:pointer; color:var(--ink); }
+  .chip.on { background:var(--blue); color:#fff; border-color:var(--blue); }
+  #mermaid-host { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px; overflow:auto; text-align:center; min-height:120px; }
+  .spin { width:18px; height:18px; border:3px solid rgba(0,94,184,.25); border-top-color:var(--blue); border-radius:50%; animation:s .8s linear infinite; display:inline-block; vertical-align:-3px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .err { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:12px 14px; border-radius:10px; font-size:14px; }
+  .placeholder { color:var(--muted); font-size:14px; text-align:center; padding:30px 10px; }
+  /* gate */
+  .gate { position:fixed; inset:0; background:linear-gradient(135deg,#00437f,#005EB8); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .gate .box { background:#fff; border-radius:16px; padding:34px; width:340px; text-align:center; }
+  .gate input { width:100%; padding:12px; border:1px solid var(--line); border-radius:10px; margin:14px 0; font-size:15px; }
+  .gate .logo { font-family:Georgia,serif; font-style:italic; font-weight:700; color:var(--blue); font-size:26px; }
+  .hide { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="box">
+    <div class="logo">Carrier</div>
+    <div style="font-weight:700;margin-top:8px" data-i="gateTitle">Code Explainer</div>
+    <div class="muted-note" data-i="gateSub">Zadejte heslo pro přístup.</div>
+    <input type="password" id="gatePass" placeholder="Heslo" onkeydown="if(event.key==='Enter')doGate()" />
+    <button class="btn primary" style="width:100%;justify-content:center" onclick="doGate()" data-i="gateBtn">Pokračovat</button>
+    <div class="err hide" id="gateErr" style="margin-top:12px" data-i="gateErr">Nesprávné heslo.</div>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="brand"><span class="logo">Carrier</span> <span data-i="appName">Code Explainer</span></div>
+  <div class="sp"></div>
+  <div class="langs">
+    <button data-lang="cs" class="on" onclick="setLang('cs')">CS</button>
+    <button data-lang="en" onclick="setLang('en')">EN</button>
+    <button data-lang="sk" onclick="setLang('sk')">SK</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 data-i="title">Vysvětlení a vizualizace kódu</h1>
+  <p class="sub" data-i="subtitle">Vlož kód nebo nahraj soubor — AI ti ho srozumitelně vysvětlí, vygeneruje dokumentaci a nakreslí diagramy logiky.</p>
+
+  <div class="card">
+    <h2 data-i="inputTitle">Kód</h2>
+    <textarea class="code" id="code" data-i-ph="codePh" placeholder="Sem vlož kód (libovolný jazyk)…"></textarea>
+    <div class="drop" id="drop">
+      <span data-i="dropHint">Klikni nebo přetáhni soubor s kódem</span>
+      <span id="fileName" style="display:block;font-weight:600;color:var(--blue);margin-top:4px"></span>
+      <input type="file" id="file" class="hide" />
+    </div>
+    <div class="row">
+      <button class="btn primary" id="goExplain" onclick="run('explain')"><span data-i="btnExplain">Vysvětlit</span></button>
+      <button class="btn" id="goDoc" onclick="run('document')"><span data-i="btnDoc">Dokumentace</span></button>
+      <button class="btn" id="goDiagram" onclick="run('diagram')"><span data-i="btnDiagram">Diagram</span></button>
+      <button class="btn" onclick="clearAll()"><span data-i="btnClear">Vyčistit</span></button>
+    </div>
+  </div>
+
+  <div class="card" id="resultCard">
+    <div class="tabs">
+      <button class="tab on" data-tab="explain" onclick="showTab('explain')" data-i="tabExplain">Vysvětlení</button>
+      <button class="tab" data-tab="document" onclick="showTab('document')" data-i="tabDoc">Dokumentace</button>
+      <button class="tab" data-tab="diagram" onclick="showTab('diagram')" data-i="tabDiagram">Diagram</button>
+    </div>
+
+    <div class="out" id="tab-explain">
+      <div class="placeholder" data-i="phExplain">Vlož kód a klikni na „Vysvětlit".</div>
+    </div>
+
+    <div class="out hide" id="tab-document">
+      <div class="placeholder" data-i="phDoc">Vlož kód a klikni na „Dokumentace".</div>
+    </div>
+
+    <div class="out hide" id="tab-diagram">
+      <div class="diagram-types">
+        <button class="chip on" data-dt="flowchart" onclick="setDt('flowchart')" data-i="dtFlow">Vývojový diagram</button>
+        <button class="chip" data-dt="sequence" onclick="setDt('sequence')" data-i="dtSeq">Sekvenční</button>
+        <button class="chip" data-dt="class" onclick="setDt('class')" data-i="dtClass">Struktura tříd</button>
+        <button class="chip" data-dt="callgraph" onclick="setDt('callgraph')" data-i="dtCall">Graf volání</button>
+      </div>
+      <div id="diagramStatus" class="placeholder" data-i="phDiagram">Vyber typ diagramu a klikni na „Diagram".</div>
+      <div id="mermaid-host" class="hide"></div>
+      <div class="row hide" id="diagramActions">
+        <button class="btn" onclick="exportSvg()"><span data-i="exSvg">Stáhnout SVG</span></button>
+        <button class="btn" onclick="exportPng()"><span data-i="exPng">Stáhnout PNG</span></button>
+        <button class="btn" onclick="copyText(window.__mermaid||'')"><span data-i="copyCode">Kopírovat kód</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<script>
+/* ===== i18n ===== */
+const T = {
+  cs: { appName:'Code Explainer', title:'Vysvětlení a vizualizace kódu',
+    subtitle:'Vlož kód nebo nahraj soubor — AI ti ho srozumitelně vysvětlí, vygeneruje dokumentaci a nakreslí diagramy logiky.',
+    inputTitle:'Kód', codePh:'Sem vlož kód (libovolný jazyk)…', dropHint:'Klikni nebo přetáhni soubor s kódem',
+    btnExplain:'Vysvětlit', btnDoc:'Dokumentace', btnDiagram:'Diagram', btnClear:'Vyčistit',
+    tabExplain:'Vysvětlení', tabDoc:'Dokumentace', tabDiagram:'Diagram',
+    phExplain:'Vlož kód a klikni na „Vysvětlit".', phDoc:'Vlož kód a klikni na „Dokumentace".', phDiagram:'Vyber typ diagramu a klikni na „Diagram".',
+    dtFlow:'Vývojový diagram', dtSeq:'Sekvenční', dtClass:'Struktura tříd', dtCall:'Graf volání',
+    exSvg:'Stáhnout SVG', exPng:'Stáhnout PNG', copyCode:'Kopírovat kód', dlMd:'Stáhnout .md', dlDoc:'Stáhnout Word', copy:'Kopírovat',
+    gateTitle:'Code Explainer', gateSub:'Zadejte heslo pro přístup.', gateBtn:'Pokračovat', gateErr:'Nesprávné heslo.',
+    needCode:'Nejdřív vlož kód nebo nahraj soubor.', working:'Pracuji…', copied:'Zkopírováno', diagramErr:'Diagram se nepodařilo vykreslit. Zkus jiný typ nebo menší kód.' },
+  en: { appName:'Code Explainer', title:'Code explanation and visualization',
+    subtitle:'Paste code or upload a file — AI explains it clearly, generates documentation and draws diagrams of the logic.',
+    inputTitle:'Code', codePh:'Paste your code here (any language)…', dropHint:'Click or drop a code file',
+    btnExplain:'Explain', btnDoc:'Documentation', btnDiagram:'Diagram', btnClear:'Clear',
+    tabExplain:'Explanation', tabDoc:'Documentation', tabDiagram:'Diagram',
+    phExplain:'Paste code and click “Explain”.', phDoc:'Paste code and click “Documentation”.', phDiagram:'Pick a diagram type and click “Diagram”.',
+    dtFlow:'Flowchart', dtSeq:'Sequence', dtClass:'Class structure', dtCall:'Call graph',
+    exSvg:'Download SVG', exPng:'Download PNG', copyCode:'Copy code', dlMd:'Download .md', dlDoc:'Download Word', copy:'Copy',
+    gateTitle:'Code Explainer', gateSub:'Enter the password to continue.', gateBtn:'Continue', gateErr:'Incorrect password.',
+    needCode:'Paste code or upload a file first.', working:'Working…', copied:'Copied', diagramErr:'Could not render the diagram. Try another type or smaller code.' },
+  sk: { appName:'Code Explainer', title:'Vysvetlenie a vizualizácia kódu',
+    subtitle:'Vlož kód alebo nahraj súbor — AI ti ho zrozumiteľne vysvetlí, vygeneruje dokumentáciu a nakreslí diagramy logiky.',
+    inputTitle:'Kód', codePh:'Sem vlož kód (ľubovoľný jazyk)…', dropHint:'Klikni alebo presuň súbor s kódom',
+    btnExplain:'Vysvetliť', btnDoc:'Dokumentácia', btnDiagram:'Diagram', btnClear:'Vyčistiť',
+    tabExplain:'Vysvetlenie', tabDoc:'Dokumentácia', tabDiagram:'Diagram',
+    phExplain:'Vlož kód a klikni na „Vysvetliť".', phDoc:'Vlož kód a klikni na „Dokumentácia".', phDiagram:'Vyber typ diagramu a klikni na „Diagram".',
+    dtFlow:'Vývojový diagram', dtSeq:'Sekvenčný', dtClass:'Štruktúra tried', dtCall:'Graf volaní',
+    exSvg:'Stiahnuť SVG', exPng:'Stiahnuť PNG', copyCode:'Kopírovať kód', dlMd:'Stiahnuť .md', dlDoc:'Stiahnuť Word', copy:'Kopírovať',
+    gateTitle:'Code Explainer', gateSub:'Zadajte heslo pre prístup.', gateBtn:'Pokračovať', gateErr:'Nesprávne heslo.',
+    needCode:'Najprv vlož kód alebo nahraj súbor.', working:'Pracujem…', copied:'Skopírované', diagramErr:'Diagram sa nepodarilo vykresliť. Skús iný typ alebo menší kód.' },
+};
+let lang = 'cs';
+let dt = 'flowchart';
+
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('on', b.dataset.lang === l));
+  document.querySelectorAll('[data-i]').forEach(e => { const v = T[l][e.dataset.i]; if (v != null) e.textContent = v; });
+  document.querySelectorAll('[data-i-ph]').forEach(e => { const v = T[l][e.dataset.iPh]; if (v != null) e.placeholder = v; });
+}
+function setDt(x){ dt = x; document.querySelectorAll('[data-dt]').forEach(c => c.classList.toggle('on', c.dataset.dt === x)); }
+
+/* ===== gate ===== */
+function doGate(){
+  const v = document.getElementById('gatePass').value;
+  if (v === 'carrier*') { document.getElementById('gate').classList.add('hide'); }
+  else { document.getElementById('gateErr').classList.remove('hide'); }
+}
+
+/* ===== input ===== */
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+let fileName = '';
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files[0]) readFile(e.target.files[0]); });
+function readFile(f){
+  const r = new FileReader();
+  r.onload = () => { document.getElementById('code').value = String(r.result).slice(0, 120000); fileName = f.name; document.getElementById('fileName').textContent = f.name; };
+  r.readAsText(f);
+}
+function clearAll(){
+  document.getElementById('code').value=''; fileName=''; document.getElementById('fileName').textContent='';
+  ['explain','document'].forEach(k => { document.getElementById('tab-'+k).innerHTML = '<div class="placeholder">'+T[lang]['ph'+(k==='explain'?'Explain':'Doc')]+'</div>'; });
+  document.getElementById('mermaid-host').classList.add('hide'); document.getElementById('diagramActions').classList.add('hide');
+  document.getElementById('diagramStatus').classList.remove('hide'); document.getElementById('diagramStatus').textContent = T[lang].phDiagram;
+}
+
+/* ===== tabs ===== */
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  ['explain','document','diagram'].forEach(k => document.getElementById('tab-'+k).classList.toggle('hide', k !== t));
+}
+
+/* ===== run ===== */
+async function run(kind){
+  const code = document.getElementById('code').value.trim();
+  if (!code) { alert(T[lang].needCode); return; }
+  showTab(kind);
+  if (kind === 'diagram') return runDiagram();
+  const host = document.getElementById('tab-'+kind);
+  const btn = document.getElementById(kind === 'explain' ? 'goExplain' : 'goDoc');
+  btn.disabled = true;
+  host.innerHTML = '<div class="placeholder"><span class="spin"></span> ' + T[lang].working + '</div>';
+  try {
+    const r = await fetch('/api/'+kind, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, language: lang, filename: fileName }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'error');
+    const html = DOMPurify.sanitize(marked.parse(data.text || ''));
+    host.innerHTML = '<div class="md">'+html+'</div>' + actionBar(kind, data.text || '');
+    window['__'+kind] = data.text || '';
+  } catch (e) {
+    host.innerHTML = '<div class="err">'+(e.message||'error')+'</div>';
+  } finally { btn.disabled = false; }
+}
+function actionBar(kind, text){
+  const dl = kind === 'document';
+  return '<div class="row" style="margin-top:16px">' +
+    '<button class="btn" onclick="copyText(window.__'+kind+'||\'\')">'+T[lang].copy+'</button>' +
+    (dl ? '<button class="btn" onclick="dlText(window.__document||\'\',\'md\')">'+T[lang].dlMd+'</button><button class="btn" onclick="dlText(window.__document||\'\',\'doc\')">'+T[lang].dlDoc+'</button>' : '') +
+    '</div>';
+}
+
+/* ===== diagram ===== */
+mermaid.initialize({ startOnLoad:false, securityLevel:'loose', theme:'default', themeVariables:{ primaryColor:'#E6F0FA', primaryBorderColor:'#005EB8', lineColor:'#5A6B82', fontFamily:'Inter,sans-serif' } });
+async function runDiagram(){
+  const code = document.getElementById('code').value.trim();
+  if (!code) { alert(T[lang].needCode); return; }
+  const status = document.getElementById('diagramStatus');
+  const host = document.getElementById('mermaid-host');
+  const acts = document.getElementById('diagramActions');
+  document.getElementById('goDiagram').disabled = true;
+  acts.classList.add('hide'); host.classList.add('hide');
+  status.classList.remove('hide'); status.innerHTML = '<span class="spin"></span> ' + T[lang].working;
+  try {
+    const r = await fetch('/api/diagram', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, language: lang, type: dt }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'error');
+    window.__mermaid = data.mermaid || '';
+    const { svg } = await mermaid.render('mmd-'+Date.now(), window.__mermaid);
+    host.innerHTML = svg; host.classList.remove('hide'); status.classList.add('hide'); acts.classList.remove('hide');
+  } catch (e) {
+    status.classList.remove('hide'); status.innerHTML = '<div class="err">'+T[lang].diagramErr+'</div>';
+    console.error(e);
+  } finally { document.getElementById('goDiagram').disabled = false; }
+}
+
+/* ===== exports ===== */
+function copyText(t){ navigator.clipboard.writeText(t); }
+function dlBlob(name, blob){ const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(u),1000); }
+function dlText(text, fmt){
+  const base = (fileName.replace(/\.[^.]+$/,'') || 'code') + '-docs';
+  if (fmt === 'doc') {
+    const html = '<html><head><meta charset="utf-8"></head><body>'+DOMPurify.sanitize(marked.parse(text))+'</body></html>';
+    dlBlob(base+'.doc', new Blob(['﻿'+html], { type:'application/msword' }));
+  } else { dlBlob(base+'.md', new Blob([text], { type:'text/markdown' })); }
+}
+function exportSvg(){ const svg = document.querySelector('#mermaid-host svg'); if(!svg) return; dlBlob('diagram.svg', new Blob([new XMLSerializer().serializeToString(svg)], { type:'image/svg+xml' })); }
+function exportPng(){
+  const svg = document.querySelector('#mermaid-host svg'); if(!svg) return;
+  const s = new XMLSerializer().serializeToString(svg);
+  const img = new Image();
+  img.onload = () => {
+    const sc = 2; const c = document.createElement('canvas'); c.width = img.width*sc; c.height = img.height*sc;
+    const ctx = c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.scale(sc,sc); ctx.drawImage(img,0,0);
+    c.toBlob(b => dlBlob('diagram.png', b));
+  };
+  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+}
+
+setLang('cs');
+</script>
+<script src="https://carrier-chatbot-1021575611536.europe-west3.run.app/widget.js" data-app="code-explainer" defer></script>
+</body>
+</html>
